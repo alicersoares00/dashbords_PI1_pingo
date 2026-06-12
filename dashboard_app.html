@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=device-width, initial-scale=1.0">
+    <title>PINGO - Dashboard Interativo de Reuso</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --background: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 410px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 8px solid #222;
+        }
+
+        /* Header */
+        .app-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 25px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* Content */
+        .app-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Metric */
+        .main-metric {
+            text-align: center;
+            padding: 20px 10px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: none;
+        }
+
+        .main-metric .value {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            line-height: 1;
+        }
+
+        .main-metric .unit {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .main-metric .sub {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+
+        /* Grid Metrics */
+        .grid-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .mini-card .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 4px;
+        }
+
+        /* Controls */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button.btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Hardware Status Indicators */
+        .hw-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+        .hw-status:last-child {
+            border-bottom: none;
+        }
+
+        .status-indicator {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-on { color: var(--success); }
+        .status-off { color: var(--danger); }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            height: 10px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--primary);
+            height: 100%;
+            width: 75%;
+            transition: width 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="app-header">
+            <h1>PINGO</h1>
+            <div class="status-badge" id="hw-connection">ONLINE</div>
+        </div>
+
+        <div class="app-content">
+            
+            <div class="card main-metric">
+                <div class="card-title">Economia Acumulada</div>
+                <div class="value" id="lbl-litros">1.240</div>
+                <div class="unit">Litros Salvos</div>
+                <div class="sub" id="lbl-equivalencia">Sua contribuição já evitou o desperdício equivalente a 8 banhos de 15 minutos!</div>
+            </div>
+
+            <div class="grid-metrics">
+                <div class="card mini-card">
+                    <div class="card-title">Economia Estimada</div>
+                    <div class="value" id="lbl-financeiro">R$ 45,00</div>
+                </div>
+                <div class="card mini-card">
+                    <div class="card-title">Projeção Mensal</div>
+                    <div class="value" id="lbl-projecao">950 L</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Status do Hardware Integrado</div>
+                
+                <div class="hw-status">
+                    <span>Válvula Solenoide:</span>
+                    <span id="lbl-valvula" class="status-indicator status-on">ABERTA</span>
+                </div>
+                
+                <div class="hw-status">
+                    <span>Ciclo Detectado:</span>
+                    <span id="lbl-ciclo" style="font-weight: 700; color: var(--text);">2° (Enxágue)</span>
+                </div>
+
+                <div class="hw-status">
+                    <span>Nível do Reservatório:</span>
+                    <span id="lbl-boia" class="status-indicator">75% (Ativo)</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="bar-nivel" style="width: 75%;"></div>
+                </div>
+            </div>
+
+            <div class="card control-group">
+                <div class="card-title">Simulador de Ciclo de Lavagem (Regras de Negócio)</div>
+                
+                <div>
+                    <label for="cmb-maquina">Capacidade da Máquina:</label>
+                    <select id="cmb-maquina">
+                        <option value="padrao">Padrão (Até 10kg) ~ 125L/ciclo</option>
+                        <option value="grande">Grande Porte (17kg) ~ 197L/ciclo</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="cmb-modo">Configuração de Reuso (Modo Ativo):</label>
+                    <select id="cmb-modo">
+                        <option value="combinado">Modo Combinado (Reuso 2º e 3º fluxos)</option>
+                        <option value="normal">Modo Normal (Reuso apenas do 3º fluxo)</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary" id="btn-simular">Simular Nova Lavagem</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Estado inicial do sistema baseado nos dados do artigo técnico
+        let totalLitros = 1240;
+        let valorLitroTarifa = 0.036; // Estimativa de custo por litro baseada na conta residencial média
+
+        // Elementos do DOM
+        const lblLitros = document.getElementById('lbl-litros');
+        const lblEquivalencia = document.getElementById('lbl-equivalencia');
+        const lblFinanceiro = document.getElementById('lbl-financeiro');
+        const lblProjecao = document.getElementById('lbl-projecao');
+        const lblValvula = document.getElementById('lbl-valvula');
+        const lblCiclo = document.getElementById('lbl-ciclo');
+        const lblBoia = document.getElementById('lbl-boia');
+        const barNivel = document.getElementById('bar-nivel');
+        
+        const cmbMaquina = document.getElementById('cmb-maquina');
+        const cmbModo = document.getElementById('cmb-modo');
+        const btnSimular = document.getElementById('btn-simular');
+
+        // Função para atualizar os elementos visuais da interface
+        function atualizarDashboard() {
+            // Formata os números para exibição local
+            lblLitros.innerText = totalLitros.toLocaleString('pt-BR');
+            
+            // Regra de Negócio: 1 Banho de 15 min consome aprox. 150 Litros de água
+            const banhosEquivalentes = Math.floor(totalLitros / 150);
+            lblEquivalencia.innerText = `Sua contribuição já evitou o desperdício equivalente a ${banhosEquivalentes} banhos de 15 minutos!`;
+            
+            // Cálculo Financeiro de Economia Estimada
+            const economiaDinheiro = totalLitros * valorLitroTarifa;
+            lblFinanceiro.innerText = `R$ ${economiaDinheiro.toFixed(2).replace('.', ',')}`;
+            
+            // Projeção Mensal baseada no consumo atual acumulado
+            const projecaoMensal = Math.floor(totalLitros * 0.76);
+            lblProjecao.innerText = `${projecaoMensal} L`;
+        }
+
+        // Evento de Simulação de Lavagem aplicando a Filtragem de Fluxos
+        btnSimular.addEventListener('click', () => {
+            // Determina o volume base do enxágue conforme o porte da lavadora
+            let volumeEnxangueBase = cmbMaquina.value === 'grande' ? 85 : 60;
+            let multiplicadorFluxo = cmbModo.value === 'combinado' ? 2 : 1;
+            
+            // Volume total calculado para a lavagem atual
+            let aguaEconomizadaNestaLavagem = volumeEnxangueBase * multiplicadorFluxo;
+            
+            // Simulação de transição de estado do Hardware (Efeito Visual)
+            lblValvula.innerText = "CAPTANDO";
+            lblValvula.className = "status-indicator status-on";
+            lblCiclo.innerText = cmbModo.value === 'combinado' ? "2° e 3° Ativos" : "3° Ativo (Enxágue)";
+            
+            // Atualiza nível do reservatório ficticiamente para 95%
+            barNivel.style.width = "95%";
+            lblBoia.innerText = "95% (Cheio)";
+
+            setTimeout(() => {
+                // Incrementa o estado global do banco de dados simulado
+                totalLitros += aguaEconomizadaNestaLavagem;
+                atualizarDashboard();
+                
+                // Retorna o hardware ao estado de repouso estável
+                lblValvula.innerText = "FECHADA";
+                lblValvula.className = "status-indicator status-off";
+                barNivel.style.width = "70%";
+                lblBoia.innerText = "70% (Estável)";
+            }, 1200); // 1.2 segundos para simular a resposta do Arduino/ESP32
+        });
+
+        // Execução Inicial
+        atualizarDashboard();
+    </script>
+</body>
+</html>

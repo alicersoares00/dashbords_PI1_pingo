@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=device-width, initial-scale=1.0">
+    <title>PINGO - Dashboard de Captação Industrial (ETL)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 26px;
+            color: var(--primary);
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .source-badge {
+            background-color: #dbeafe;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .kpi-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .selector-box {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Área de renderização do gráfico */
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .balance-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .balance-item {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        .balance-item.consumed { border-left-color: var(--warning); }
+        .balance-item.returned { border-left-color: var(--success); }
+
+        .balance-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .balance-val {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Monitorização de Captação Hidrológica Industrial</h1>
+                <p>Dados consolidados do pipeline de ETL (Análise dos Municípios Brasileiros)</p>
+            </div>
+            <span class="source-badge">Pipeline ETL Executado</span>
+        </header>
+
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Volume Total Captado</div>
+                <div class="kpi-value" style="color: var(--primary);">458.200 L/s</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Gap Volumétrico Nacional</div>
+                <div class="kpi-value" style="color: var(--warning);">185.400 L/s</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Amostragem Processada</div>
+                <div class="kpi-value">5.298 Municípios</div>
+            </div>
+        </section>
+
+        <div class="dashboard-layout">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Top Municípios por Demanda Hídrica Industrial (L/s)</div>
+                    <select class="selector-box" id="filtro-regiao">
+                        <option value="todos">Todos os Polos</option>
+                        <option value="sudeste">Apenas Região Sudeste</option>
+                        <option value="outros">Outras Regiões</option>
+                    </select>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="meuGraficoCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Balanço do Fluxo</div>
+                </div>
+                <div class="balance-box">
+                    <div class="balance-item">
+                        <div class="balance-label">Água Captada Bruta</div>
+                        <div class="balance-val" style="color: var(--primary);">458.200 L/s</div>
+                    </div>
+                    <div class="balance-item consumed">
+                        <div class="balance-label">Água Consumida em Processo</div>
+                        <div class="balance-val" style="color: var(--warning);">272.800 L/s</div>
+                    </div>
+                    <div class="balance-item returned">
+                        <div class="balance-label">Água Retornada</div>
+                        <div class="balance-val" style="color: var(--success);">185.400 L/s</div>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 10px;">
+                        *Dados em conformidade com o Gráfico 01 e Gráfico 02 do relatório de engenharia de dados de PI1.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de dados real extraída do seu documento de ETL
+        const dadosETL = [
+            { municipio: "SÃO PAULO", vazao: 4950, regiao: "sudeste" },
+            { municipio: "RIO DE JANEIRO", vazao: 4100, regiao: "sudeste" },
+            { municipio: "TRÊS LAGOAS", vazao: 3850, regiao: "outros" },
+            { municipio: "MUCURI", vazao: 2900, regiao: "outros" },
+            { municipio: "RIO LARGO", vazao: 2450, regiao: "outros" },
+            { municipio: "CORURIPE", vazao: 2100, regiao: "outros" },
+            { municipio: "SERTÃOZINHO", vazao: 1950, regiao: "sudeste" },
+            { municipio: "CAMAÇARI", vazao: 1800, regiao: "outros" },
+            { municipio: "VOLTA REDONDA", vazao: 1750, regiao: "sudeste" },
+            { municipio: "SÃO LUÍS DO QUITUNDE", vazao: 1600, regiao: "outros" }
+        ];
+
+        // Inicialização da instância do Gráfico
+        const ctx = document.getElementById('meuGraficoCanvas').getContext('2d');
+        let graficoInstancia = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dadosETL.map(d => d.municipio),
+                datasets: [{
+                    label: 'Vazão Captada (Litros por Segundo)',
+                    data: dadosETL.map(d => d.vazao),
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Gráfico de barras horizontais idêntico ao seu relatório
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Função lógica para atualizar o gráfico usando o filtro dinamicamente
+        document.getElementById('filtro-regiao').addEventListener('change', function(e) {
+            const filtro = e.target.value;
+            
+            // Filtragem dos dados
+            const dadosFiltrados = dadosETL.filter(d => filtro === 'todos' || d.regiao === filtro);
+            
+            // Atualização das propriedades da instância da Chart.js
+            graficoInstancia.data.labels = dadosFiltrados.map(d => d.municipio);
+            graficoInstancia.data.datasets[0].data = dadosFiltrados.map(d => d.vazao);
+            
+            // Renderiza novamente a tela com efeito de transição animada
+            graficoInstancia.update();
+        });
+    </script>
+</body>
+</html>
