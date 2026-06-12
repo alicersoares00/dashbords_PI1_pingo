@@ -33,6 +33,8 @@ O repositório está dividido em dois módulos principais de simulação e anál
   * Filtro interativo por região geográfica (Ex: Isolar Polos do Sudeste vs Outras Regiões).
   * Gráfico de balanço volumétrico nacional, ilustrando o gap de água que é captada mas não retorna tratada, validando o modelo de mercado do PINGO.
 
+referências: AGÊNCIA NACIONAL DE ÁGUAS E SANEAMENTO BÁSICO (ANA). Uso de Água na Indústria. Dados Abertos ANA, 22 mar. 2022. Conjunto de dados (Feature Layer). Disponível em: <https://dadosabertos.ana.gov.br/datasets/223aaeb62313415e91361dbe5f30928b>. Acesso em: 12 jun. 2026.
+
 ---
 
 ## Como Executar os Projetos
